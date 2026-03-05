@@ -1,0 +1,63 @@
+name: Increase Language Variety
+
+on:
+  schedule:
+    - cron: '0 0 * * 1'  # every Monday at midnight
+  workflow_dispatch:
+
+jobs:
+  language-variety:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout workflow repo
+        uses: actions/checkout@v3
+
+      - name: Set up Git
+        run: |
+          git config --global user.name "Dippp10"
+          git config --global user.email "deepikakarthik697@gmail.com"
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y curl jq
+
+      - name: Create/Update Repos in Different Languages
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          LANGUAGES=("Python" "JavaScript" "Go" "Rust" "Java" "C++" "Kotlin" "Dart" "TypeScript")
+          for LANG in "${LANGUAGES[@]}"; do
+            REPO_NAME="lang-${LANG,,}-$(date +%s)"
+            echo "Creating repo $REPO_NAME in $LANG"
+
+            # Create repo via GitHub API
+            curl -H "Authorization: token $GH_TOKEN" \
+                 -d "{\"name\":\"$REPO_NAME\",\"private\":false}" \
+                 https://api.github.com/user/repos
+
+            # Initialize local repo and add sample code
+            mkdir $REPO_NAME
+            cd $REPO_NAME
+
+            # Create sample file depending on language
+            case $LANG in
+              "Python") echo 'print("Hello Python")' > main.py ;;
+              "JavaScript") echo 'console.log("Hello JS")' > main.js ;;
+              "Go") echo 'package main\nimport "fmt"\nfunc main() { fmt.Println("Hello Go") }' > main.go ;;
+              "Rust") echo 'fn main() { println!("Hello Rust"); }' > main.rs ;;
+              "Java") echo 'public class Main { public static void main(String[] args) { System.out.println("Hello Java"); } }' > Main.java ;;
+              "C++") echo '#include <iostream>\nint main() { std::cout << "Hello C++"; return 0; }' > main.cpp ;;
+              "Kotlin") echo 'fun main() { println("Hello Kotlin") }' > main.kt ;;
+              "Dart") echo 'void main() { print("Hello Dart"); }' > main.dart ;;
+              "TypeScript") echo 'console.log("Hello TS")' > main.ts ;;
+            esac
+
+            git init
+            git add .
+            git commit -m "Initial commit for $LANG repo"
+            git branch -M main
+            git remote add origin https://github.com/YourUsername/$REPO_NAME.git
+            git push -u origin main
+
+            cd ..
+          done
