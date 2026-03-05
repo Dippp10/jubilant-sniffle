@@ -1,0 +1,101 @@
+name: Repo Automation
+
+on:
+  schedule:
+    - cron: "0 */4 * * *"
+  workflow_dispatch:
+
+jobs:
+  automate:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Install tools
+        run: sudo apt-get update && sudo apt-get install jq -y
+
+      - name: Create 30 repositories
+        env:
+          TOKEN: ${{ secrets.MAIN_TOKEN }}
+          USER: ${{ secrets.MAIN_USERNAME }}
+        run: |
+          for i in {1..30}
+          do
+            REPO=repo-$(date +%s)-$i
+            echo "Creating $REPO"
+
+            curl -s -X POST https://api.github.com/user/repos \
+            -H "Authorization: token $TOKEN" \
+            -d "{\"name\":\"$REPO\",\"private\":false}"
+
+            echo $REPO >> repos.txt
+          done
+
+      - name: Star repositories (bot account)
+        env:
+          TOKEN: ${{ secrets.BOT_TOKEN }}
+          BOT: ${{ secrets.BOT_USERNAME }}
+          MAIN: ${{ secrets.MAIN_USERNAME }}
+        run: |
+          while read repo
+          do
+            curl -X PUT \
+            -H "Authorization: token $TOKEN" \
+            https://api.github.com/user/starred/$MAIN/$repo
+          done < repos.txt
+
+      - name: Fork repositories
+        env:
+          TOKEN: ${{ secrets.BOT_TOKEN }}
+          MAIN: ${{ secrets.MAIN_USERNAME }}
+        run: |
+          while read repo
+          do
+            curl -X POST \
+            -H "Authorization: token $TOKEN" \
+            https://api.github.com/repos/$MAIN/$repo/forks
+          done < repos.txt
+
+      - name: Create Pull Request
+        env:
+          TOKEN: ${{ secrets.BOT_TOKEN }}
+          MAIN: ${{ secrets.MAIN_USERNAME }}
+          BOT: ${{ secrets.BOT_USERNAME }}
+        run: |
+          while read repo
+          do
+            git clone https://$TOKEN@github.com/$BOT/$repo.git
+            cd $repo
+
+            echo "update" >> update.txt
+            git config user.name "vamansworld786-arch"
+            git config user.email "vamansworld786@gmail.com"
+
+            git add .
+            git commit -m "update"
+            git push
+
+            cd ..
+
+            curl -X POST \
+            -H "Authorization: token $TOKEN" \
+            https://api.github.com/repos/$MAIN/$repo/pulls \
+            -d "{\"title\":\"Auto PR\",\"head\":\"$BOT:main\",\"base\":\"main\"}"
+
+          done < repos.txt
+
+      - name: Auto merge PR
+        env:
+          TOKEN: ${{ secrets.MAIN_TOKEN }}
+          MAIN: ${{ secrets.MAIN_USERNAME }}
+        run: |
+          while read repo
+          do
+            PR=$(curl -s \
+            -H "Authorization: token $TOKEN" \
+            https://api.github.com/repos/$MAIN/$repo/pulls | jq '.[0].number')
+
+            curl -X PUT \
+            -H "Authorization: token $TOKEN" \
+            https://api.github.com/repos/$MAIN/$repo/pulls/$PR/merge
+          done < repos.txt
