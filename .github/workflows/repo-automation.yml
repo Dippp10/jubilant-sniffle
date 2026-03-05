@@ -56,46 +56,4 @@ jobs:
             https://api.github.com/repos/$MAIN/$repo/forks
           done < repos.txt
 
-      - name: Create Pull Request
-        env:
-          TOKEN: ${{ secrets.BOT_TOKEN }}
-          MAIN: ${{ secrets.MAIN_USERNAME }}
-          BOT: ${{ secrets.BOT_USERNAME }}
-        run: |
-          while read repo
-          do
-            git clone https://$TOKEN@github.com/$BOT/$repo.git
-            cd $repo
-
-            echo "update" >> update.txt
-            git config user.name "vamansworld786-arch"
-            git config user.email "vamansworld786@gmail.com"
-
-            git add .
-            git commit -m "update"
-            git push
-
-            cd ..
-
-            curl -X POST \
-            -H "Authorization: token $TOKEN" \
-            https://api.github.com/repos/$MAIN/$repo/pulls \
-            -d "{\"title\":\"Auto PR\",\"head\":\"$BOT:main\",\"base\":\"main\"}"
-
-          done < repos.txt
-
-      - name: Auto merge PR
-        env:
-          TOKEN: ${{ secrets.MAIN_TOKEN }}
-          MAIN: ${{ secrets.MAIN_USERNAME }}
-        run: |
-          while read repo
-          do
-            PR=$(curl -s \
-            -H "Authorization: token $TOKEN" \
-            https://api.github.com/repos/$MAIN/$repo/pulls | jq '.[0].number')
-
-            curl -X PUT \
-            -H "Authorization: token $TOKEN" \
-            https://api.github.com/repos/$MAIN/$repo/pulls/$PR/merge
-          done < repos.txt
+      
