@@ -1,4 +1,4 @@
-name: Repo Automation with Verified Forks
+name: Repo Automation Reliable
 
 on:
   schedule:
@@ -27,7 +27,7 @@ jobs:
               -H "Authorization: token $TOKEN" \
               -d "{\"name\":\"$REPO\",\"private\":false}"
             echo $REPO >> repos.txt
-            sleep 2  # small delay to avoid API timing issues
+            sleep 2
           done
 
       - name: Fork repositories (bot account) with verification
@@ -42,18 +42,16 @@ jobs:
             retries=0
             success=false
 
-            while [ $retries -lt 5 ] && [ "$success" = "false" ]
-            do
+            while [ $retries -lt 5 ] && [ "$success" = "false" ]; do
               # Attempt fork
-              response=$(curl -s -X POST \
-                -H "Authorization: token $TOKEN" \
-                https://api.github.com/repos/$MAIN/$repo/forks)
+              curl -s -X POST -H "Authorization: token $TOKEN" \
+                https://api.github.com/repos/$MAIN/$repo/forks > /dev/null
 
               # Verify fork exists
               fork_check=$(curl -s -H "Authorization: token $TOKEN" \
                 https://api.github.com/repos/$BOT/$repo)
 
-              if echo "$fork_check" | jq -e '.fork == true' > /dev/null; then
+              if echo "$fork_check" | jq -e '.fork == true' >/dev/null 2>&1; then
                 echo "Fork confirmed: $BOT/$repo"
                 success=true
               else
@@ -64,7 +62,7 @@ jobs:
             done
 
             if [ "$success" = "false" ]; then
-              echo "⚠️ Failed to fork $repo after 5 attempts"
+              echo "⚠️ Failed to fork $repo after 5 attempts. Skipping..."
             fi
           done < repos.txt
 
@@ -78,6 +76,7 @@ jobs:
             curl -X PUT \
               -H "Authorization: token $TOKEN" \
               https://api.github.com/user/starred/$MAIN/$repo
+            sleep 1
           done < repos.txt
 
       - name: Add commit in fork and push
