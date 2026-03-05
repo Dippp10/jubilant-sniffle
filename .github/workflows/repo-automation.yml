@@ -1,8 +1,8 @@
-name: Repo Automation
+name: Repo Automation with Verified Forks
 
 on:
   schedule:
-    - cron: "0 */4 * * *"
+    - cron: "0 */4 * * *"   # Runs every 4 hours
   workflow_dispatch:
 
 jobs:
@@ -12,48 +12,90 @@ jobs:
     steps:
 
       - name: Install tools
-        run: sudo apt-get update && sudo apt-get install jq -y
+        run: sudo apt-get update && sudo apt-get install jq git -y
 
       - name: Create 30 repositories
         env:
           TOKEN: ${{ secrets.MAIN_TOKEN }}
-          USER: ${{ secrets.MAIN_USERNAME }}
         run: |
+          > repos.txt
           for i in {1..30}
           do
             REPO=repo-$(date +%s)-$i
             echo "Creating $REPO"
-
             curl -s -X POST https://api.github.com/user/repos \
-            -H "Authorization: token $TOKEN" \
-            -d "{\"name\":\"$REPO\",\"private\":false}"
-
+              -H "Authorization: token $TOKEN" \
+              -d "{\"name\":\"$REPO\",\"private\":false}"
             echo $REPO >> repos.txt
+            sleep 2  # small delay to avoid API timing issues
           done
+
+      - name: Fork repositories (bot account) with verification
+        env:
+          TOKEN: ${{ secrets.BOT_TOKEN }}
+          MAIN: ${{ secrets.MAIN_USERNAME }}
+          BOT: ${{ secrets.BOT_USERNAME }}
+        run: |
+          while read repo
+          do
+            echo "Forking $repo..."
+            retries=0
+            success=false
+
+            while [ $retries -lt 5 ] && [ "$success" = "false" ]
+            do
+              # Attempt fork
+              response=$(curl -s -X POST \
+                -H "Authorization: token $TOKEN" \
+                https://api.github.com/repos/$MAIN/$repo/forks)
+
+              # Verify fork exists
+              fork_check=$(curl -s -H "Authorization: token $TOKEN" \
+                https://api.github.com/repos/$BOT/$repo)
+
+              if echo "$fork_check" | jq -e '.fork == true' > /dev/null; then
+                echo "Fork confirmed: $BOT/$repo"
+                success=true
+              else
+                echo "Fork not found, retrying..."
+                retries=$((retries+1))
+                sleep 5
+              fi
+            done
+
+            if [ "$success" = "false" ]; then
+              echo "⚠️ Failed to fork $repo after 5 attempts"
+            fi
+          done < repos.txt
 
       - name: Star repositories (bot account)
         env:
           TOKEN: ${{ secrets.BOT_TOKEN }}
-          BOT: ${{ secrets.BOT_USERNAME }}
           MAIN: ${{ secrets.MAIN_USERNAME }}
         run: |
           while read repo
           do
             curl -X PUT \
-            -H "Authorization: token $TOKEN" \
-            https://api.github.com/user/starred/$MAIN/$repo
+              -H "Authorization: token $TOKEN" \
+              https://api.github.com/user/starred/$MAIN/$repo
           done < repos.txt
 
-      - name: Fork repositories
+      - name: Add commit in fork and push
         env:
           TOKEN: ${{ secrets.BOT_TOKEN }}
-          MAIN: ${{ secrets.MAIN_USERNAME }}
+          BOT: ${{ secrets.BOT_USERNAME }}
         run: |
           while read repo
           do
-            curl -X POST \
-            -H "Authorization: token $TOKEN" \
-            https://api.github.com/repos/$MAIN/$repo/forks
+            git clone https://$TOKEN@github.com/$BOT/$repo.git
+            cd $repo
+            git config user.name "vamansworld786-arch"
+            git config user.email "vamansworld786@gmail.com"
+            echo "update" >> update.txt
+            git add .
+            git commit -m "Automation update"
+            git push origin main
+            cd ..
           done < repos.txt
 
       
