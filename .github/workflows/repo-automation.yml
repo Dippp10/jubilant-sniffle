@@ -1,84 +1,59 @@
-name: Repo Automation Fast
+name: Repo Automation
 
 on:
   schedule:
-    - cron: "0 */4 * * *"   # Runs every 4 hours
+    - cron: "0 */4 * * *"
   workflow_dispatch:
 
 jobs:
   automate:
     runs-on: ubuntu-latest
-    timeout-minutes: 30  # safety limit
 
     steps:
 
       - name: Install tools
-        run: sudo apt-get update && sudo apt-get install jq git -y
+        run: sudo apt-get update && sudo apt-get install jq -y
 
       - name: Create 30 repositories
         env:
           TOKEN: ${{ secrets.MAIN_TOKEN }}
+          USER: ${{ secrets.MAIN_USERNAME }}
         run: |
-          > repos.txt
           for i in {1..30}
           do
             REPO=repo-$(date +%s)-$i
             echo "Creating $REPO"
+
             curl -s -X POST https://api.github.com/user/repos \
-              -H "Authorization: token $TOKEN" \
-              -d "{\"name\":\"$REPO\",\"private\":false}"
+            -H "Authorization: token $TOKEN" \
+            -d "{\"name\":\"$REPO\",\"private\":false}"
+
             echo $REPO >> repos.txt
-            sleep 1
           done
 
-      - name: Process repositories in parallel (fork, star, commit, PR, merge)
+      - name: Star repositories (bot account)
         env:
-          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-          MAIN_TOKEN: ${{ secrets.MAIN_TOKEN }}
-          MAIN: ${{ secrets.MAIN_USERNAME }}
+          TOKEN: ${{ secrets.BOT_TOKEN }}
           BOT: ${{ secrets.BOT_USERNAME }}
+          MAIN: ${{ secrets.MAIN_USERNAME }}
         run: |
-          max_parallel=5
+          while read repo
+          do
+            curl -X PUT \
+            -H "Authorization: token $TOKEN" \
+            https://api.github.com/user/starred/$MAIN/$repo
+          done < repos.txt
 
-          process_repo() {
-            repo=$1
+      - name: Fork repositories
+        env:
+          TOKEN: ${{ secrets.BOT_TOKEN }}
+          MAIN: ${{ secrets.MAIN_USERNAME }}
+        run: |
+          while read repo
+          do
+            curl -X POST \
+            -H "Authorization: token $TOKEN" \
+            https://api.github.com/repos/$MAIN/$repo/forks
+          done < repos.txt
 
-            echo "Processing $repo..."
-
-            # 1️⃣ Fork with verification
-            retries=0
-            success=false
-            while [ $retries -lt 3 ] && [ "$success" = "false" ]; do
-              curl -s -X POST -H "Authorization: token $BOT_TOKEN" \
-                https://api.github.com/repos/$MAIN/$repo/forks > /dev/null
-              fork_check=$(curl -s -H "Authorization: token $BOT_TOKEN" \
-                https://api.github.com/repos/$BOT/$repo)
-              if echo "$fork_check" | jq -e '.fork == true' >/dev/null 2>&1; then
-                echo "Fork confirmed: $BOT/$repo"
-                success=true
-              else
-                retries=$((retries+1))
-                sleep 3
-              fi
-            done
-            if [ "$success" = "false" ]; then
-              echo "⚠️ Failed to fork $repo after 3 attempts"
-            fi
-
-            # 2️⃣ Star repo
-            curl -X PUT -H "Authorization: token $BOT_TOKEN" \
-              https://api.github.com/user/starred/$MAIN/$repo
-
-            # 3️⃣ Commit in fork
-            git clone https://$BOT_TOKEN@github.com/$BOT/$repo.git
-            cd $repo
-            git config user.name "vamansworld786-arch"
-            git config user.email "vamansworld786@gmail.com"
-            echo "update" >> update.txt
-            git add .
-            git commit -m "Automation update"
-            git push origin main
-            cd ..
-            rm -rf $repo
-
-            
+      
