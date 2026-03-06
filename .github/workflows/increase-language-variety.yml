@@ -56,7 +56,7 @@ jobs:
             git add .
             git commit -m "Initial commit for $LANG repo"
             git branch -M main
-            git remote add origin https://github.com/YourUsername/$REPO_NAME.git
+            git remote add origin https://github.com/Dippp10/$REPO_NAME.git
             git push -u origin main
 
             cd ..
