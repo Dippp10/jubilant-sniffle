@@ -56,8 +56,6 @@ jobs:
             git add .
             git commit -m "Initial commit for $LANG repo"
             git branch -M main
-            git remote add origin https://github.com/Dippp10/$REPO_NAME.git
-            git push -u origin main
 
-            cd ..
-          done
+            git remote add origin https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY_OWNER}/$REPO_NAME.git
+            git push origin main
