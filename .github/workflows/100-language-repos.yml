@@ -22,7 +22,6 @@ jobs:
           powershell,swift,objective-c,fortran,pascal,forth,awk,bash,racket2,
           lua2,nim2,zig2,crystal2
         ]
-    runs-on: ubuntu-latest
 
     steps:
       - name: Setup git
