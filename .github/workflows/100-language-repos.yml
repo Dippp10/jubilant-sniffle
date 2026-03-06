@@ -1,0 +1,164 @@
+name: 100 Language Repositories
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  create-repos:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        language: [
+          python,javascript,typescript,c,cpp,java,go,rust,kotlin,dart,ruby,php,
+          csharp,r,julia,scala,haskell,clojure,swift,lua,perl,nim,zig,elixir,
+          erlang,fsharp,ocaml,crystal,d,pony,idris,chapel,eiffel,ring,vala,
+          verilog,vhdl,solidity,ada,cobol,smalltalk,scheme,racket,commonlisp,
+          prolog,haxe,qml,glsl,latex,markdown,yaml,toml,json,xml,html,css,sql,
+          graphql,dockerfile,makefile,cmake,gradle,kotlin_script,batch,fish,zsh,
+          ini,properties,handlebars,pug,haml,sass,less,stylus,matlab,groovy,
+          powershell,swift,objective-c,fortran,pascal,forth,awk,bash,racket2,
+          lua2,nim2,zig2,crystal2
+        ]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup git
+        run: |
+          git config --global user.name "Dippp10"
+          git config --global user.email "deepikakarthik697@gmail.com"
+
+      - name: Create and populate repository
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          USER: ${{ github.repository_owner }}
+        run: |
+          LANG_NAME=${{ matrix.language }}
+          REPO="lang-${LANG_NAME}-$(date +%s)"
+
+          echo "Creating repository $REPO for $LANG_NAME"
+
+          # Create repo via API
+          curl -s -X POST \
+            -H "Authorization: token $TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/user/repos \
+            -d "{\"name\":\"$REPO\",\"auto_init\":true}"
+
+          # Wait to ensure repo exists
+          sleep 5
+
+          # Clone with token authentication
+          for i in {1..5}; do
+            git clone https://x-access-token:$TOKEN@github.com/$USER/$REPO.git && break
+            echo "Clone failed, retrying in 5 seconds..."
+            sleep 5
+          done
+
+          cd $REPO
+          mkdir src
+          
+          # Determine file extension based on language
+          case "$LANG_NAME" in
+            python) FILE="src/main.py";;
+            javascript) FILE="src/main.js";;
+            typescript) FILE="src/main.ts";;
+            c) FILE="src/main.c";;
+            cpp) FILE="src/main.cpp";;
+            java) FILE="src/Main.java";;
+            go) FILE="src/main.go";;
+            rust) FILE="src/main.rs";;
+            kotlin) FILE="src/main.kt";;
+            dart) FILE="src/main.dart";;
+            ruby) FILE="src/main.rb";;
+            php) FILE="src/main.php";;
+            csharp) FILE="src/main.cs";;
+            r) FILE="src/main.r";;
+            julia) FILE="src/main.jl";;
+            scala) FILE="src/main.scala";;
+            haskell) FILE="src/main.hs";;
+            clojure) FILE="src/main.clj";;
+            swift) FILE="src/main.swift";;
+            lua) FILE="src/main.lua";;
+            perl) FILE="src/main.pl";;
+            nim) FILE="src/main.nim";;
+            zig) FILE="src/main.zig";;
+            elixir) FILE="src/main.ex";;
+            erlang) FILE="src/main.erl";;
+            fsharp) FILE="src/main.fs";;
+            ocaml) FILE="src/main.ml";;
+            crystal) FILE="src/main.cr";;
+            d) FILE="src/main.d";;
+            pony) FILE="src/main.pony";;
+            idris) FILE="src/main.idr";;
+            chapel) FILE="src/main.chpl";;
+            eiffel) FILE="src/main.e";;
+            ring) FILE="src/main.ring";;
+            vala) FILE="src/main.vala";;
+            verilog) FILE="src/main.v";;
+            vhdl) FILE="src/main.vhd";;
+            solidity) FILE="src/main.sol";;
+            ada) FILE="src/main.adb";;
+            cobol) FILE="src/main.cob";;
+            smalltalk) FILE="src/main.st";;
+            scheme) FILE="src/main.scm";;
+            racket) FILE="src/main.rkt";;
+            commonlisp) FILE="src/main.lisp";;
+            prolog) FILE="src/main.plg";;
+            haxe) FILE="src/main.hx";;
+            qml) FILE="src/main.qml";;
+            glsl) FILE="src/main.glsl";;
+            latex) FILE="src/main.tex";;
+            markdown) FILE="src/main.md";;
+            yaml) FILE="src/main.yaml";;
+            toml) FILE="src/main.toml";;
+            json) FILE="src/main.json";;
+            xml) FILE="src/main.xml";;
+            html) FILE="src/index.html";;
+            css) FILE="src/style.css";;
+            sql) FILE="src/query.sql";;
+            graphql) FILE="src/query.graphql";;
+            dockerfile) FILE="Dockerfile";;
+            makefile) FILE="Makefile";;
+            cmake) FILE="CMakeLists.txt";;
+            gradle) FILE="build.gradle";;
+            kotlin_script) FILE="src/main.kts";;
+            batch) FILE="src/main.bat";;
+            fish) FILE="src/main.fish";;
+            zsh) FILE="src/main.zsh";;
+            ini) FILE="src/config.ini";;
+            properties) FILE="src/config.properties";;
+            handlebars) FILE="src/template.hbs";;
+            pug) FILE="src/template.pug";;
+            haml) FILE="src/template.haml";;
+            sass) FILE="src/style.sass";;
+            less) FILE="src/style.less";;
+            stylus) FILE="src/style.styl";;
+            matlab) FILE="src/main.m";;
+            groovy) FILE="src/main.groovy";;
+            powershell) FILE="src/main.ps1";;
+            swift) FILE="src/main.swift";;
+            objective-c) FILE="src/main.m";;
+            fortran) FILE="src/main.f90";;
+            pascal) FILE="src/main.pas";;
+            forth) FILE="src/main.fth";;
+            awk) FILE="src/main.awk";;
+            bash) FILE="src/main.sh";;
+            racket2) FILE="src/main2.rkt";;
+            lua2) FILE="src/main2.lua";;
+            nim2) FILE="src/main2.nim";;
+            zig2) FILE="src/main2.zig";;
+            crystal2) FILE="src/main2.cr";;
+            *) FILE="src/main.txt";;
+          esac
+
+          # Generate 50 lines
+          for i in $(seq 1 50); do
+            echo "// Sample line $i for $LANG_NAME" >> $FILE
+          done
+
+          git add .
+          git commit -m "Add $LANG_NAME code (50 lines)"
+          git push
