@@ -1,61 +1,105 @@
-name: Increase Language Variety
+name: 100 Language Variety Booster
 
 on:
   schedule:
-    - cron: '0 0 * * 1'  # every Monday at midnight
+    - cron: "0 */12 * * *"
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
-  language-variety:
+  boost:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout workflow repo
-        uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Set up Git
+      - name: Setup Git
         run: |
           git config --global user.name "Dippp10"
           git config --global user.email "deepikakarthik697@gmail.com"
 
-      - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install -y curl jq
-
-      - name: Create/Update Repos in Different Languages
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Generate language files
         run: |
-          LANGUAGES=("Python" "JavaScript" "Go" "Rust" "Java" "C++" "Kotlin" "Dart" "TypeScript")
-          for LANG in "${LANGUAGES[@]}"; do
-            REPO_NAME="lang-${LANG,,}-$(date +%s)"
-            echo "Creating repo $REPO_NAME in $LANG"
 
-            # Create repo via GitHub API
-            curl -H "Authorization: token $GH_TOKEN" \
-                 -d "{\"name\":\"$REPO_NAME\",\"private\":false}" \
-                 https://api.github.com/user/repos
+          mkdir -p languages
 
-            # Initialize local repo and add sample code
-            mkdir $REPO_NAME
-            cd $REPO_NAME
+          echo 'print("Hello Python")' > languages/main.py
+          echo 'console.log("Hello JS")' > languages/main.js
+          echo 'console.log("Hello TS")' > languages/main.ts
+          echo '#include <stdio.h>
+          int main(){printf("Hello C");}' > languages/main.c
+          echo '#include <iostream>
+          int main(){std::cout<<"Hello C++";}' > languages/main.cpp
+          echo 'public class Main { public static void main(String[] args){ System.out.println("Hello Java");}}' > languages/Main.java
+          echo 'package main
+          import "fmt"
+          func main(){ fmt.Println("Hello Go") }' > languages/main.go
+          echo 'fn main(){ println!("Hello Rust"); }' > languages/main.rs
+          echo 'fun main(){ println("Hello Kotlin") }' > languages/main.kt
+          echo 'void main(){ print("Hello Dart"); }' > languages/main.dart
+          echo 'puts "Hello Ruby"' > languages/main.rb
+          echo '<?php echo "Hello PHP"; ?>' > languages/main.php
+          echo 'using System;
+          class Program{ static void Main(){ Console.WriteLine("Hello C#");}}' > languages/main.cs
+          echo 'print("Hello R")' > languages/main.r
+          echo 'println("Hello Julia")' > languages/main.jl
+          echo 'BEGIN { print "Hello AWK" }' > languages/main.awk
+          echo 'echo "Hello Bash"' > languages/main.sh
+          echo '<html><body>Hello HTML</body></html>' > languages/index.html
+          echo 'body{background:white;}' > languages/style.css
+          echo 'SELECT * FROM table;' > languages/query.sql
+          echo 'program hello; begin writeln("Hello Pascal"); end.' > languages/main.pas
+          echo 'print *, "Hello Fortran"' > languages/main.f90
+          echo 'object Hello extends App { println("Hello Scala") }' > languages/main.scala
+          echo 'main = putStrLn "Hello Haskell"' > languages/main.hs
+          echo '(println "Hello Clojure")' > languages/main.clj
+          echo 'echo Hello PowerShell' > languages/main.ps1
+          echo 'MsgBox "Hello VBScript"' > languages/main.vbs
+          echo 'Write-Host "Hello PowerShell"' > languages/main.ps
+          echo 'console.log("Hello Node")' > languages/node.js
+          echo 'package main; func main(){}' > languages/main.zig
+          echo 'print("Hello Nim")' > languages/main.nim
+          echo 'print("Hello Lua")' > languages/main.lua
+          echo 'disp("Hello Matlab")' > languages/main.m
+          echo 'say "Hello Perl";' > languages/main.pl
+          echo 'print("Hello Groovy")' > languages/main.groovy
+          echo 'println!("Hello Crystal")' > languages/main.cr
+          echo 'print("Hello OCaml");;' > languages/main.ml
+          echo 'echo "Hello Fish"' > languages/main.fish
+          echo 'echo "Hello Batch"' > languages/main.bat
+          echo 'println("Hello Swift")' > languages/main.swift
+          echo 'print("Hello Hack")' > languages/main.hack
+          echo 'module Main where main = putStrLn "Hello Idris"' > languages/main.idr
+          echo 'print("Hello Pony")' > languages/main.pony
+          echo 'print("Hello Elixir")' > languages/main.ex
+          echo 'puts "Hello Crystal"' > languages/main.crystal
+          echo 'echo "Hello Shell"' > languages/main.shell
+          echo 'print("Hello Smalltalk")' > languages/main.st
+          echo 'print("Hello V")' > languages/main.v
+          echo 'print("Hello Red")' > languages/main.red
+          echo 'print("Hello Rebol")' > languages/main.rebol
+          echo 'print("Hello Ring")' > languages/main.ring
+          echo 'print("Hello Chapel")' > languages/main.chpl
+          echo 'print("Hello Eiffel")' > languages/main.e
+          echo 'print("Hello LiveScript")' > languages/main.ls
+          echo 'print("Hello Monkey C")' > languages/main.mc
+          echo 'print("Hello Pike")' > languages/main.pike
+          echo 'print("Hello PostScript")' > languages/main.psc
+          echo 'print("Hello PureScript")' > languages/main.purs
+          echo 'print("Hello QML")' > languages/main.qml
+          echo 'print("Hello ReasonML")' > languages/main.re
+          echo 'print("Hello Squirrel")' > languages/main.nut
+          echo 'print("Hello Tcl")' > languages/main.tcl
+          echo 'print("Hello Terra")' > languages/main.t
+          echo 'print("Hello Unicon")' > languages/main.icn
+          echo 'print("Hello Xtend")' > languages/main.xtend
+          echo 'print("Hello Yara")' > languages/main.yar
 
-            # Create sample file depending on language
-            case $LANG in
-              "Python") echo 'print("Hello Python")' > main.py ;;
-              "JavaScript") echo 'console.log("Hello JS")' > main.js ;;
-              "Go") echo 'package main\nimport "fmt"\nfunc main() { fmt.Println("Hello Go") }' > main.go ;;
-              "Rust") echo 'fn main() { println!("Hello Rust"); }' > main.rs ;;
-              "Java") echo 'public class Main { public static void main(String[] args) { System.out.println("Hello Java"); } }' > Main.java ;;
-              "C++") echo '#include <iostream>\nint main() { std::cout << "Hello C++"; return 0; }' > main.cpp ;;
-              "Kotlin") echo 'fun main() { println("Hello Kotlin") }' > main.kt ;;
-              "Dart") echo 'void main() { print("Hello Dart"); }' > main.dart ;;
-              "TypeScript") echo 'console.log("Hello TS")' > main.ts ;;
-            esac
-
-            git init
-            git add .
-            git commit -m "Initial commit for $LANG repo"
-            git branch -M main
-
-            git remote add origin https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY_OWNER}/$REPO_NAME.git
-            git push origin main
+      - name: Commit and push
+        run: |
+          git add .
+          git commit -m "Add 100 languages $(date)" || echo "No changes"
+          git push
