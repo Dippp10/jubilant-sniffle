@@ -1,0 +1,75 @@
+name: Create Language Repositories
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  create-repos:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install jq -y
+
+      - name: Configure git
+        run: |
+          git config --global user.name "Dippp10"
+          git config --global user.email "deepikakarthik697@gmail.com"
+
+      - name: Create repositories with different languages
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          USER: ${{ github.repository_owner }}
+        run: |
+
+          languages=(
+          python javascript typescript go rust kotlin dart ruby php java
+          c cpp csharp swift scala julia r nim zig elixir erlang
+          haskell clojure groovy lua perl ocaml crystal d
+          )
+
+          extensions=(
+          py js ts go rs kt dart rb php java
+          c cpp cs swift scala jl r nim zig ex erl
+          hs clj groovy lua pl ml cr d
+          )
+
+          for i in "${!languages[@]}"
+          do
+
+            lang=${languages[$i]}
+            ext=${extensions[$i]}
+            repo="lang-$lang-$(date +%s)-$i"
+
+            echo "Creating repository $repo"
+
+            curl -s -X POST \
+            -H "Authorization: token $TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/user/repos \
+            -d "{\"name\":\"$repo\",\"auto_init\":true}"
+
+            git clone https://x-access-token:$TOKEN@github.com/$USER/$repo.git
+
+            cd $repo
+
+            mkdir src
+
+            file="src/main.$ext"
+
+            for j in $(seq 1 200)
+            do
+              echo "// Example code line $j for $lang" >> $file
+            done
+
+            git add .
+            git commit -m "Add $lang example code"
+            git push
+
+            cd ..
+            rm -rf $repo
+
+          done
