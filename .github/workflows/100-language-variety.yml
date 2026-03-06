@@ -1,0 +1,135 @@
+name: Generate 100 Language Folders
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 */12 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup git
+        run: |
+          git config --global user.name "Dippp10 "
+          git config --global user.email "deepikakarthik697@gmail.com"
+
+      - name: Generate 100 languages with 50 lines
+        run: |
+
+          mkdir -p languages
+
+          declare -A files
+
+          files=(
+          [python]="main.py"
+          [javascript]="main.js"
+          [typescript]="main.ts"
+          [c]="main.c"
+          [cpp]="main.cpp"
+          [java]="Main.java"
+          [go]="main.go"
+          [rust]="main.rs"
+          [kotlin]="main.kt"
+          [dart]="main.dart"
+          [ruby]="main.rb"
+          [php]="main.php"
+          [csharp]="main.cs"
+          [r]="main.r"
+          [julia]="main.jl"
+          [scala]="main.scala"
+          [haskell]="main.hs"
+          [clojure]="main.clj"
+          [swift]="main.swift"
+          [lua]="main.lua"
+          [perl]="main.pl"
+          [groovy]="main.groovy"
+          [nim]="main.nim"
+          [zig]="main.zig"
+          [v]="main.v"
+          [tcl]="main.tcl"
+          [awk]="main.awk"
+          [bash]="main.sh"
+          [powershell]="main.ps1"
+          [fortran]="main.f90"
+          [pascal]="main.pas"
+          [d]="main.d"
+          [crystal]="main.cr"
+          [elixir]="main.ex"
+          [erlang]="main.erl"
+          [fsharp]="main.fs"
+          [ocaml]="main.ml"
+          [purescript]="main.purs"
+          [reasonml]="main.re"
+          [squirrel]="main.nut"
+          [pony]="main.pony"
+          [chapel]="main.chpl"
+          [eiffel]="main.e"
+          [ring]="main.ring"
+          [vala]="main.vala"
+          [verilog]="main.v"
+          [vhdl]="main.vhd"
+          [solidity]="main.sol"
+          [ada]="main.adb"
+          [cobol]="main.cob"
+          [smalltalk]="main.st"
+          [scheme]="main.scm"
+          [racket]="main.rkt"
+          [commonlisp]="main.lisp"
+          [prolog]="main.plg"
+          [haxe]="main.hx"
+          [qml]="main.qml"
+          [glsl]="main.glsl"
+          [latex]="main.tex"
+          [markdown]="main.md"
+          [yaml]="main.yaml"
+          [toml]="main.toml"
+          [json]="main.json"
+          [xml]="main.xml"
+          [html]="index.html"
+          [css]="style.css"
+          [sql]="query.sql"
+          [graphql]="query.graphql"
+          [dockerfile]="Dockerfile"
+          [makefile]="Makefile"
+          [cmake]="CMakeLists.txt"
+          [gradle]="build.gradle"
+          [kotlin_script]="main.kts"
+          [batch]="main.bat"
+          [fish]="main.fish"
+          [zsh]="main.zsh"
+          [ini]="config.ini"
+          [properties]="config.properties"
+          [handlebars]="template.hbs"
+          [pug]="template.pug"
+          [haml]="template.haml"
+          [sass]="style.sass"
+          [less]="style.less"
+          [stylus]="style.styl"
+          )
+
+          for lang in "${!files[@]}"
+          do
+            folder="languages/$lang"
+            mkdir -p "$folder"
+
+            file="$folder/${files[$lang]}"
+
+            for i in $(seq 1 50)
+            do
+              echo "// sample line $i for $lang" >> "$file"
+            done
+          done
+
+      - name: Commit and push
+        run: |
+          git add .
+          git commit -m "Add 100 language folders with 50 lines $(date)" || echo "No changes"
+          git push
