@@ -19,8 +19,8 @@ jobs:
           prolog,haxe,qml,glsl,latex,markdown,yaml,toml,json,xml,html,css,sql,
           graphql,dockerfile,makefile,cmake,gradle,kotlin_script,batch,fish,zsh,
           ini,properties,handlebars,pug,haml,sass,less,stylus,matlab,groovy,
-          powershell,swift,objective-c,fortran,pascal,forth,awk,bash,racket2,
-          lua2,nim2,zig2,crystal2
+          powershell,objective-c,fortran,pascal,forth,awk,bash,racket2,lua2,
+          nim2,zig2,crystal2
         ]
 
     steps:
@@ -59,7 +59,7 @@ jobs:
           cd $REPO
           mkdir src
           
-          # Determine file extension based on language
+          # Determine file extension
           case "$LANG_NAME" in
             python) FILE="src/main.py";;
             javascript) FILE="src/main.js";;
@@ -138,7 +138,6 @@ jobs:
             matlab) FILE="src/main.m";;
             groovy) FILE="src/main.groovy";;
             powershell) FILE="src/main.ps1";;
-            swift) FILE="src/main.swift";;
             objective-c) FILE="src/main.m";;
             fortran) FILE="src/main.f90";;
             pascal) FILE="src/main.pas";;
